@@ -1,11 +1,13 @@
 package steps;
 
 import filter.CustomLogFilter;
+import io.cucumber.gherkin.internal.com.eclipsesource.json.Json;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import io.restassured.response.ResponseBody;
 import org.junit.Assert;
 
 import java.util.List;
@@ -99,7 +101,49 @@ public class VotesSteps {
         i_check_number_of_votes_for_this(sub_id);
         List voteList = response.getBody().jsonPath().get();
         int lastVoteCount = voteList.size();
-        Assert.assertTrue(lastVoteCount==initialVoteCount+1);
+        System.out.println("initialVoteCount ---->"+initialVoteCount);
+        System.out.println("lastVOTE  ----> "+lastVoteCount);
+        Assert.assertEquals(lastVoteCount, initialVoteCount);
     }
 
+    @When("I will create a vote for {string} with this {string}")
+    public void iWillCreateAVoteForWithThis(String sub_id, String image_id) {
+        String requestBody = "{\n" +
+                "  \"image_id\": \""+image_id+"\",\n" +
+                "  \"sub_id\": \""+sub_id+"\""+",\n"+
+                "  \"value\": \"add\"\n}";
+
+
+        try {
+            response = given()
+                    .headers("x-api-key",key)
+                    .contentType(ContentType.JSON)
+                    .filter(customLogFilter)
+                    .and()
+                    .body(requestBody)
+                    .when()
+                    .post("votes")
+                    .then()
+                    .statusCode(200)
+                    .and()
+                    .contentType(ContentType.JSON)
+                    .extract().response();
+        }catch (AssertionError assertionError){
+            System.out.println(assertionError.getMessage());
+            System.out.println(customLogFilter.getRequestBuilder().toString());
+            System.out.println(customLogFilter.getResponseBuilder().toString());
+        }
+
+    }
+
+    @Then("I have numbers one more votes for {string} should be contain this {string}")
+    public void iHaveNumbersOneMoreVotesForShouldBeContainThis(String sub_id, String image_id) {
+        i_check_number_of_votes_for_this(sub_id);
+        List voteList = response.getBody().jsonPath().get();
+        int lastVoteCount = voteList.size();
+        List<String> images = response.jsonPath().getList("image_id"); // Get response and convert Json- Get image_id parameters
+        String actualImageId =  images.get(lastVoteCount-1);
+        Assert.assertEquals(image_id,actualImageId);
+        System.out.println("Expected image_id : "+image_id+"  Actual image_id : "+actualImageId);
+    }
 }

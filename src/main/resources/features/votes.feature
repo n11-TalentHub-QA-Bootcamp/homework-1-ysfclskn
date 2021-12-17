@@ -20,4 +20,16 @@ Feature: List votes
     # assertion en son vote ettiğim image id benim
     # get edip boyutunu karşılaştırdığım adımda
     # o image id mi var diye bakılacak
+@votes
+Scenario Outline: Check votes
+
+    When I check number of votes for this "<sub_id>"
+    Then I see numbers
+    When I will create a vote for "<sub_id>" with this "<image_id>"
+    Then I have numbers one more votes for "<sub_id>" should be contain this "<image_id>"
+
+    Examples:
+    |sub_id      | image_id |
+    |my-user-1234| ysfclskn4 |
+
 
